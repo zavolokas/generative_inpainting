@@ -1,6 +1,7 @@
-model_logs
-logs
-data
 .venv/
+model_logs/
+logs/
+data/
 __pycache__/
 examples/
+.vscode/
