@@ -14,7 +14,6 @@ Keras-Preprocessing==1.1.0
 Markdown==3.1.1
 mock==3.0.5
 mss==4.0.3
-neuralgym==0.0.1
 numpy==1.17.4
 numpy2gif==1.0
 opencv-python==4.1.2.30
