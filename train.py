@@ -23,6 +23,26 @@ def multigpu_graph_def(model, FLAGS, data, gpu_id=0, loss_type='g'):
     else:
         raise ValueError('loss type is not supported.')
 
+def random_crop(image, to_shape):
+    height, width = to_shape
+    imgh, imgw = image.shape[0:2]
+    y_pos = np.random.randint(imgh-height+1)
+    x_pos = np.random.randint(imgw-width+1)
+    return image[y_pos:y_pos+height, x_pos:x_pos+width, :]
+
+def scale(image, to_shape):
+    height, width = to_shape
+    imgh, imgw = image.shape[0:2]
+    if imgh < height or imgw < width or align:
+        scale = np.maximum(height/imgh, width/imgw)
+        image = cv2.resize(
+            image,
+            (math.ceil(imgw*scale), math.ceil(imgh*scale)))
+    return image
+
+def preprocess(image):
+    cropped_img = random_crop(image, [178, 178])
+    return scale(cropped_img, [256, 256])
 
 if __name__ == "__main__":
     # training data
@@ -35,6 +55,7 @@ if __name__ == "__main__":
         img_shapes = [img_shapes, img_shapes]
     data = ng.data.DataFromFNames(
         fnames, img_shapes, random_crop=FLAGS.random_crop,
+        fn_preprocess = preprocess,
         nthreads=FLAGS.num_cpus_per_job)
     images = data.data_pipeline(FLAGS.batch_size)
     # main model
@@ -52,6 +73,7 @@ if __name__ == "__main__":
             static_fnames = val_fnames[i:i+1]
             static_images = ng.data.DataFromFNames(
                 static_fnames, img_shapes, nthreads=1,
+                fn_preprocess = preprocess,
                 random_crop=FLAGS.random_crop).data_pipeline(1)
             static_inpainted_images = model.build_static_infer_graph(
                 FLAGS, static_images, name='static_view/%d' % i)
